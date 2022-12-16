@@ -1,86 +1,108 @@
-import {
-  Card,
-  Page,
-  Layout,
-  TextContainer,
-  Image,
-  Stack,
-  Link,
-  Heading,
-} from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
-
-import { trophyImage } from "../assets";
-
+import { useState, useMemo } from "react";
+import { TextContainer, Toast, Frame, Button, DataTable, Card, Heading, Page, Stack, TextField, EmptyState } from "@shopify/polaris";
+import { ResourcePicker } from '@shopify/app-bridge-react';
+import { useAuthenticatedFetch } from "../hooks";
 import { ProductsCard } from "../components";
 
 export default function HomePage() {
+  const [newPrice, setNewPrice] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [showToast, setShowToast] = useState(false);
+  const fetch = useAuthenticatedFetch();
+
+  const productData = useMemo(() => products.map((product) => [
+    product.id,
+    product.title,
+    `${product.variants[0].price}¥`,
+    `${newPrice}¥`
+  ]), [products, newPrice]);
+
+  const submitHandler = async (productID, selectedPrice) => {
+    console.log(productID)
+    console.log(selectedPrice)
+    const response = await fetch("/api/products/updateprice", {
+      method: 'POST',
+      body:JSON.stringify({
+        id: productID,
+        price: selectedPrice
+      }),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8'
+      },
+    });
+
+    if (response.ok) {
+      setShowToast(true)
+    }
+  };
+
+  const updateTitleHandler = async () => {
+    const response = await fetch("/api/products/updatetitles", {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      setShowToast(true)
+    }
+  }
+
+  const toastMarkup = showToast ?
+    <Toast
+      content="Update Successful"
+      onDismiss={() => setShowToast(false)}
+      duration={4000}
+    /> : null;
+
   return (
-    <Page narrowWidth>
-      <TitleBar title="App name" primaryAction={null} />
-      <Layout>
-        <Layout.Section>
-          <Card sectioned>
-            <Stack
-              wrap={false}
-              spacing="extraTight"
-              distribution="trailing"
-              alignment="center"
-            >
-              <Stack.Item fill>
-                <TextContainer spacing="loose">
-                  <Heading>Nice work on building a Shopify app 🎉</Heading>
-                  <p>
-                    Your app is ready to explore! It contains everything you
-                    need to get started including the{" "}
-                    <Link url="https://polaris.shopify.com/" external>
-                      Polaris design system
-                    </Link>
-                    ,{" "}
-                    <Link url="https://shopify.dev/api/admin-graphql" external>
-                      Shopify Admin API
-                    </Link>
-                    , and{" "}
-                    <Link
-                      url="https://shopify.dev/apps/tools/app-bridge"
-                      external
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    UI library and components.
-                  </p>
-                  <p>
-                    Ready to go? Start populating your app with some sample
-                    products to view and test in your store.{" "}
-                  </p>
-                  <p>
-                    Learn more about building out your app in{" "}
-                    <Link
-                      url="https://shopify.dev/apps/getting-started/add-functionality"
-                      external
-                    >
-                      this Shopify tutorial
-                    </Link>{" "}
-                    📚{" "}
-                  </p>
-                </TextContainer>
-              </Stack.Item>
-              <Stack.Item>
-                <div style={{ padding: "0 20px" }}>
-                  <Image
-                    source={trophyImage}
-                    alt="Nice work on building a Shopify app"
-                    width={120}
-                  />
-                </div>
-              </Stack.Item>
+    <Frame>
+      <Page>
+        <Card>
+          <Card.Section>
+            <TextContainer>
+              <Heading>Update the price of a product</Heading>
+            </TextContainer>
+          </Card.Section>
+          <Card.Section>
+            <Stack vertical>
+              <Button primary onClick={() => setPickerOpen(true)}>Select Product</Button>
+              <ResourcePicker
+                resourceType="Product"
+                open={pickerOpen}
+                selectMultiple={false}
+                onCancel={() => setPickerOpen(false)}
+                onSelection={(resources) => {
+                  setPickerOpen(false)
+                  setProducts(resources.selection)
+                }}
+              />
+              <TextField
+                label="New price"
+                value={newPrice}
+                onChange={setNewPrice}
+              />
             </Stack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section>
-          <ProductsCard />
-        </Layout.Section>
-      </Layout>
-    </Page>
+          </Card.Section>
+          <Card.Section>
+            { productData.length ? <DataTable
+              columnContentTypes={['text', 'text', 'text', 'text']}
+              headings={['ID', 'Title', 'Old price', 'New price']}
+              rows={productData}
+            /> : <EmptyState heading="No Product Selected"/>}
+          </Card.Section>
+          <Card.Section>
+            <Button primary onClick={() => submitHandler(products[0].variants[0].id, newPrice)} disabled={!products.length}>Submit</Button>
+          </Card.Section>
+          <Card.Section>
+            <Heading>Update all product titles to a random new title</Heading>
+          </Card.Section>
+          <Card.Section>
+            <Button primary onClick={() => updateTitleHandler()}>Update Titles</Button>
+          </Card.Section>
+        </Card>
+        {toastMarkup}
+      </Page>
+    </Frame>
   );
 }
+
