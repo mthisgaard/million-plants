@@ -4,7 +4,7 @@ import { readFileSync } from "fs";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
-// import cron from "node-cron";
+import cron from "node-cron";
 
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
@@ -254,6 +254,6 @@ export async function createServer(
 
 createServer().then(({ app }) => app.listen(PORT));
 
-// cron.schedule('1 * * * *', async () => {
-//   console.log('running a task every hour');
-// });
+cron.schedule('1 * * * *', async () => {
+  console.log('running a task every hour');
+});
