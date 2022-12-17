@@ -93,12 +93,6 @@ export default function HomePage() {
           <Card.Section>
             <Button primary onClick={() => submitHandler(products[0].variants[0].id, newPrice)} disabled={!products.length}>Submit</Button>
           </Card.Section>
-          <Card.Section>
-            <Heading>Update all product titles to a random new title</Heading>
-          </Card.Section>
-          <Card.Section>
-            <Button primary onClick={() => updateTitleHandler()}>Update Titles</Button>
-          </Card.Section>
         </Card>
         {toastMarkup}
       </Page>

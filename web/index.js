@@ -4,7 +4,6 @@ import { readFileSync } from "fs";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
-// import cron from "node-cron";
 
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
@@ -168,31 +167,6 @@ export async function createServer(
     res.status(status).send({ success: status === 200, error });
   });
 
-  app.post("/api/products/updatetitles", async (req, res) => {
-    const session = await Shopify.Utils.loadCurrentSession(
-      req,
-      res,
-      app.get("use-online-tokens")
-    );
-
-    const { Product } = await import(
-      `@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`
-    );
-    const products = await Product.all({ session });
-
-    let status = 200;
-    let error = null;
-  
-    try {
-      await titleUpdater(session, products);
-    } catch (e) {
-      console.log(`Failed to process: ${e.message}`);
-      status = 500;
-      error = e.message;
-    }
-    res.status(status).send({ success: status === 200, error });
-  });
-
   app.use((req, res, next) => {
     const shop = Shopify.Utils.sanitizeShop(req.query.shop);
     if (Shopify.Context.IS_EMBEDDED_APP && shop) {
@@ -253,7 +227,3 @@ export async function createServer(
 }
 
 createServer().then(({ app }) => app.listen(PORT));
-
-// cron.schedule('1 * * * *', async () => {
-//   console.log('running a task every hour');
-// });

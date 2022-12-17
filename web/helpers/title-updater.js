@@ -1,6 +1,21 @@
-import { Shopify } from "@shopify/shopify-api";
+import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
+import cron from "node-cron";
 
-export default async function titleUpdater(session, products) {
+cron.schedule('* * * * *', async () => {
+  console.log('running a task every minute');
+  titleUpdater()
+});
+
+export default async function titleUpdater() {
+
+  const session = await Shopify.Utils.loadOfflineSession('million-plants.myshopify.com')
+
+  const { Product } = await import(
+    `@shopify/shopify-api/dist/rest-resources/${LATEST_API_VERSION}/index.js`
+  );
+
+  const products = await Product.all({ session });
+
   const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
 
   const productDetails = products.map((product) => {
