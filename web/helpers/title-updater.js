@@ -1,8 +1,8 @@
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 import cron from "node-cron";
 
-cron.schedule('* * * * *', async () => {
-  console.log('running a task every minute');
+cron.schedule('1 * * * *', async () => {
+  console.log('Updating titles every hour');
   titleUpdater()
 });
 
