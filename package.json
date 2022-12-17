@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@shopify/app": "^3.28.0",
-    "@shopify/cli": "^3.28.0"
+    "@shopify/cli": "^3.28.0",
+    "node-cron": "^3.0.2"
   },
   "author": "malene_w_t"
 }

@@ -4,15 +4,17 @@ import { readFileSync } from "fs";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
+import cron from "node-cron";
 
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
 import { setupGDPRWebHooks } from "./gdpr.js";
 import productCreator from "./helpers/product-creator.js";
+import priceUpdater from "./helpers/price-updater.js";
+import titleUpdater from "./helpers/title-updater.js";
 import redirectToAuth from "./helpers/redirect-to-auth.js";
 import { BillingInterval } from "./helpers/ensure-billing.js";
 import { AppInstallations } from "./app_installations.js";
-import priceUpdater from "./price-updater.js";
 
 const USE_ONLINE_TOKENS = false;
 
@@ -142,29 +144,54 @@ export async function createServer(
     res.status(status).send({ success: status === 200, error });
   });
 
+  // All endpoints after this point will have access to a request.body
+  // attribute, as a result of the express.json() middleware
+  app.use(express.json());
+
   app.post("/api/products/updateprice", async (req, res) => {
     const session = await Shopify.Utils.loadCurrentSession(
       req,
       res,
       app.get("use-online-tokens")
     );
-    console.log(req.body, 'this is the request from frontend')
-    // let status = 200;
-    // let error = null;
+
+    let status = 200;
+    let error = null;
   
-    // try {
-    //   await priceUpdater(session, req.body.id, req.body.price);
-    // } catch (e) {
-    //   console.log(`Failed to process: ${e.message}`);
-    //   status = 500;
-    //   error = e.message;
-    // }
-    // res.status(status).send({ success: status === 200, error });
+    try {
+      await priceUpdater(session, req.body.id, req.body.price);
+    } catch (e) {
+      console.log(`Failed to process: ${e.message}`);
+      status = 500;
+      error = e.message;
+    }
+    res.status(status).send({ success: status === 200, error });
   });
 
-  // All endpoints after this point will have access to a request.body
-  // attribute, as a result of the express.json() middleware
-  app.use(express.json());
+  app.post("/api/products/updatetitles", async (req, res) => {
+    const session = await Shopify.Utils.loadCurrentSession(
+      req,
+      res,
+      app.get("use-online-tokens")
+    );
+
+    const { Product } = await import(
+      `@shopify/shopify-api/dist/rest-resources/${Shopify.Context.API_VERSION}/index.js`
+    );
+    const products = await Product.all({ session });
+
+    let status = 200;
+    let error = null;
+  
+    try {
+      await titleUpdater(session, products);
+    } catch (e) {
+      console.log(`Failed to process: ${e.message}`);
+      status = 500;
+      error = e.message;
+    }
+    res.status(status).send({ success: status === 200, error });
+  });
 
   app.use((req, res, next) => {
     const shop = Shopify.Utils.sanitizeShop(req.query.shop);
@@ -226,3 +253,7 @@ export async function createServer(
 }
 
 createServer().then(({ app }) => app.listen(PORT));
+
+cron.schedule('1 * * * *', async () => {
+  console.log('running a task every hour');
+});
