@@ -2,7 +2,7 @@ import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 import cron from "node-cron";
 
 // Setting the cron schedule to execute the custom titleUpdater function every hour.
-cron.schedule('* * * * *', async () => {
+cron.schedule('1 * * * *', async () => {
   console.log('Updating titles every hour');
   titleUpdater()
 });
