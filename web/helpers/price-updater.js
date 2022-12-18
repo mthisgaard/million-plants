@@ -1,24 +1,18 @@
 import { Shopify } from "@shopify/shopify-api";
 
+// GraphQL mutation string to update product price.
 const UPDATE_PRODUCT_PRICE_MUTATION = `
   mutation productVariantUpdate($input: ProductVariantInput!) {
     productVariantUpdate(input: $input) {
       productVariant {
         id
-        title
-        inventoryPolicy
-        inventoryQuantity
         price
-        compareAtPrice
-      }
-      userErrors {
-        field
-        message
       }
     }
   }
 `;
 
+// Function to perform the GraphQL mutation using the product ID and new price from the frontend.
 export default async function priceUpdater(
   session,
   productID,

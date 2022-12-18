@@ -1,23 +1,27 @@
 import { Shopify, LATEST_API_VERSION } from "@shopify/shopify-api";
 import cron from "node-cron";
 
-cron.schedule('1 * * * *', async () => {
+// Setting the cron schedule to execute the custom titleUpdater function every hour.
+cron.schedule('* * * * *', async () => {
   console.log('Updating titles every hour');
   titleUpdater()
 });
 
 export default async function titleUpdater() {
 
+  // Loading offline session to authorize access the Admin API
   const session = await Shopify.Utils.loadOfflineSession('million-plants.myshopify.com')
 
+  const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
+
+  // Getting all products in the shop using the REST API
   const { Product } = await import(
     `@shopify/shopify-api/dist/rest-resources/${LATEST_API_VERSION}/index.js`
   );
 
   const products = await Product.all({ session });
 
-  const client = new Shopify.Clients.Graphql(session.shop, session.accessToken);
-
+  // Mapping over fetched products to get id and title
   const productDetails = products.map((product) => {
     return {id: product.admin_graphql_api_id, title: product.title}
   })
@@ -30,7 +34,7 @@ export default async function titleUpdater() {
 async function titleMutation(client, id, title) {
 
   const query = `mutation {
-    productUpdate(input: {id: "${id}", title: "${randomTitle(title)}"}) {
+    productUpdate(input: {id: "${id}", title: "${randomTitleChange(title)}"}) {
       product {
         id
       }
@@ -50,7 +54,8 @@ async function titleMutation(client, id, title) {
   }
 }
 
-function randomTitle(title) {
+// Generating a random number and changing the product title by replacing the old number with the new.
+function randomTitleChange(title) {
   const regex = /\d{4}/
   const number = Math.floor(1000 + Math.random() * 9000);
   return title.replace(regex, number)

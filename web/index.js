@@ -147,6 +147,8 @@ export async function createServer(
   // attribute, as a result of the express.json() middleware
   app.use(express.json());
 
+  // API to update the price of a product by calling the priceUpdater 
+  // function using the product ID and new price passed from the frontend.
   app.post("/api/products/updateprice", async (req, res) => {
     const session = await Shopify.Utils.loadCurrentSession(
       req,

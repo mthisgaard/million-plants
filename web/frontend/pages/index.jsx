@@ -1,26 +1,26 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { TextContainer, Toast, Frame, Button, DataTable, Card, Heading, Page, Stack, TextField, EmptyState } from "@shopify/polaris";
 import { ResourcePicker } from '@shopify/app-bridge-react';
 import { useAuthenticatedFetch } from "../hooks";
-import { ProductsCard } from "../components";
 
 export default function HomePage() {
   const [newPrice, setNewPrice] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [showToast, setShowToast] = useState(false);
+
   const fetch = useAuthenticatedFetch();
 
-  const productData = useMemo(() => products.map((product) => [
+  // Making an array of product data from the selected product to display in the table.
+  const productData = products.map((product) => [
     product.id,
     product.title,
     `${product.variants[0].price}¥`,
     `${newPrice}¥`
-  ]), [products, newPrice]);
+  ]);
 
+  // Calling the API to update the price, passing along the product id and new price.
   const submitHandler = async (productID, selectedPrice) => {
-    console.log(productID)
-    console.log(selectedPrice)
     const response = await fetch("/api/products/updateprice", {
       method: 'POST',
       body:JSON.stringify({
@@ -37,16 +37,7 @@ export default function HomePage() {
     }
   };
 
-  const updateTitleHandler = async () => {
-    const response = await fetch("/api/products/updatetitles", {
-      method: 'POST'
-    });
-
-    if (response.ok) {
-      setShowToast(true)
-    }
-  }
-
+  // Toast to let the user know the product update was successful
   const toastMarkup = showToast ?
     <Toast
       content="Update Successful"
@@ -66,6 +57,7 @@ export default function HomePage() {
           <Card.Section>
             <Stack vertical>
               <Button primary onClick={() => setPickerOpen(true)}>Select Product</Button>
+              {/* Using the Shopify resource picker component to let the user select a product to modify. Only possible to select one product. */}
               <ResourcePicker
                 resourceType="Product"
                 open={pickerOpen}
@@ -83,6 +75,7 @@ export default function HomePage() {
               />
             </Stack>
           </Card.Section>
+          {/* Displaying the selected product along with old and new price. Show message if no product is selected */}
           <Card.Section>
             { productData.length ? <DataTable
               columnContentTypes={['text', 'text', 'text', 'text']}
@@ -91,6 +84,7 @@ export default function HomePage() {
             /> : <EmptyState heading="No Product Selected"/>}
           </Card.Section>
           <Card.Section>
+            {/* Call submitHandler function when clicking submit button, passing along the id of the selected product and new price. Disable if no product has been selected. */}
             <Button primary onClick={() => submitHandler(products[0].variants[0].id, newPrice)} disabled={!products.length}>Submit</Button>
           </Card.Section>
         </Card>
@@ -99,4 +93,3 @@ export default function HomePage() {
     </Frame>
   );
 }
-
