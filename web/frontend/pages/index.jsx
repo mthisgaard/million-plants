@@ -15,8 +15,8 @@ export default function HomePage() {
   const productData = products.map((product) => [
     product.id,
     product.title,
-    `${product.variants[0].price}¥`,
-    `${newPrice}¥`
+    `¥${product.variants[0].price}`,
+    `¥${newPrice}`
   ]);
 
   // Calling the API to update the price, passing along the product id and new price.
