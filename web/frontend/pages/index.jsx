@@ -13,7 +13,6 @@ export default function HomePage() {
 
   // Making an array of product data from the selected product to display in the table.
   const productData = products.map((product) => [
-    product.id,
     product.title,
     `¥${product.variants[0].price}`,
     `¥${newPrice}`
@@ -80,8 +79,8 @@ export default function HomePage() {
           {/* Displaying the selected product along with old and new price. Show message if no product is selected */}
           <Card.Section>
             { productData.length ? <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text']}
-              headings={['ID', 'Title', 'Old price', 'New price']}
+              columnContentTypes={['text', 'text', 'text']}
+              headings={['Title', 'Old price', 'New price']}
               rows={productData}
             /> : <EmptyState heading="No Product Selected"/>}
           </Card.Section>
