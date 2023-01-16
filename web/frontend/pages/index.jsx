@@ -34,6 +34,8 @@ export default function HomePage() {
 
     if (response.ok) {
       setShowToast(true)
+      setProducts([])
+      setNewPrice('')
     }
   };
 
